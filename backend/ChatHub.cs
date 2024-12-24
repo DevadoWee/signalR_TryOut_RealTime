@@ -10,7 +10,6 @@ public sealed class ChatHub : Hub<IChatClient>
         await Clients.All.ReceiveMessage($"{Context.ConnectionId} has joined");
     }
 
-
     public async Task SendMessage(string message)
     {
         await Clients.All.ReceiveMessage($"{Context.ConnectionId}: {message}");
