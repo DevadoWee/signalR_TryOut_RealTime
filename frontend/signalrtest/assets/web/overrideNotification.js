@@ -13,7 +13,8 @@ function callJS(value) {
 
 function startListener(){
     console.log("startListener");
-    strPushNotificationUrl = "https://localhost:63204/chat-hub";
+    strPushNotificationUrl = "https://localhost:63204";
+    strHub = "chat-hub";
 
     initConnectionRT();
 }
@@ -30,12 +31,19 @@ function initConnectionRT() {
     console.log(strPushNotificationUrl);
     //constructOverrideAlertSound();
 
-    // jQuery.getScript('jquery.signalR-2.4.2.js', function () {
+    // jQuery.getScript('jquery.signalR-6.0.11.js', function () {
 
     //booOverrideWithTCP = false;
-    realTimeEvtConnection = $.hubConnection(strPushNotificationUrl);
+    const connection = new signalR.HubConnectionBuilder()
+    .withUrl(strPushNotificationUrl.concat("/", strHub), {
+        // skipNegotiation: true,  // skipNegotiation as we specify WebSockets
+        // transport: signalR.HttpTransportType.WebSockets  // force WebSocket transport
+      }) // Enable detailed logging
+    .build();
 
-    objListenerProxy = realTimeEvtConnection.createHubProxy('chat-hub');
+connection.start()
+    .then(() => console.log("Connected to SignalR"))
+    .catch(err => console.error("SignalR error:", err));
 
     
     realTimeEvtConnection.start().done(function () {
@@ -44,7 +52,7 @@ function initConnectionRT() {
         booConnectedToHub = true;
         //alert("connected")
         
-        onsole.log("Connected to HUB");
+        console.log("Connected to HUB");
         objListenerProxy.invoke("connect", strUserLoginId);
 
     });
