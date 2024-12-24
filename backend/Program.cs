@@ -1,39 +1,32 @@
-﻿using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.AspNetCore.SignalR;
+﻿using Microsoft.AspNetCore.SignalR;
 using SignalRIntro.Api;
 using Microsoft.OpenApi.Models;
 
-var UriBuilder = WebApplication.CreateBuilder(args);
+var builder = WebApplication.CreateBuilder(args);
 
-UriBuilder.Services.AddEndpointsApiExplorer();
-
-UriBuilder.Services.AddAuthorization();
-UriBuilder.Services.AddSignalR();
-UriBuilder.Services.AddControllers();
-
-UriBuilder.Services.AddCors(options =>
+// Add services to the container.
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddAuthorization();
+builder.Services.AddControllers();
+builder.Services.AddSignalR();
+builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowSpecificOrigin",
-        policy =>
-        {
-            policy.WithOrigins("http://localhost:61274")  // Your client-side app URL
-                  .AllowAnyHeader()
-                  .AllowAnyMethod()
-                  .AllowCredentials();  // Allow credentials (cookies, HTTP auth, etc.)
-        });
+    options.AddPolicy("AllowSpecificOrigin", policy =>
+    {
+        policy.AllowAnyHeader()
+            .AllowAnyMethod()
+            .SetIsOriginAllowed(_ => true)
+            .AllowCredentials();
+    });
 });
-
-UriBuilder.Services.AddSwaggerGen(c =>
+builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "My API", Version = "v1" });
 });
 
-//UriBuilder.Services.AddSignalR();
+var app = builder.Build();
 
-var app = UriBuilder.Build();
-
+// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -44,18 +37,19 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-app.UseCors("AllowSpecificOrigin");
+app.UseHttpsRedirection();
+app.UseCors("AllowSpecificOrigin"); // Use CORS early in the pipeline
+app.UseAuthorization();
 
+// Map your endpoints and hubs
+app.MapControllers();
+app.MapHub<ChatHub>("/chat-hub"); // Ensure this matches your client-side SignalR URL
+
+// Optional: Example broadcast endpoint
 app.MapPost("broadcast", async (string message, IHubContext<ChatHub, IChatClient> context) =>
 {
     await context.Clients.All.ReceiveMessage(message);
     return Results.NoContent();
 });
-
-app.UseHttpsRedirection();
-app.UseAuthorization();
-
-
-app.MapHub<ChatHub>("chat-hub");
 
 app.Run();
