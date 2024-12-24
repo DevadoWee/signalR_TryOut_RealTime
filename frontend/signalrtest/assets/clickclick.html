@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>MeowMeow</title>
+  <script type="application/javascript" src="/assets/web/web_support.js" defer></script>
+  <script type="text/javascript" src="/assets/web/jquery-3.6.0.js"></script>
+  <script type="text/javascript" src="/assets/web/jquery.signalR-2.4.2.js"></script>
+  <script type="text/javascript" src="/assets/web/OverrideNotification.js"></script>
+  <script src="flutter.js" defer></script>
+  <script src="web/clickFunctions.js" defer></script>
+  <script type="text/javascript">
+  
+    function Testing2() {
+      // alert(window.flutter_inappwebview)
+      return false;
+    }
+    function Load() {
+      document.getElementById("divNotification").addEventListener("click", function () {
+        alert("Hello from JavaScript!");
+        return imclicking();
+      })
+      //$('#divNotification').bind('tap',function() {  alert('Tap event triggered'); return openOverride(); });
+      // $('#divNotification').bind('click',function() {  alert('Tap event triggered');return openOverride(); });
+      // $('#divNotification').click(function(){
+      //alert('Does this work?');return openOverride();
+      //}); 
+    }
+  </script>
+</head>
+<body style="background-color: white;" onload="Load()">
+    <!--span id="spnNoteCount" class="badge" style="width:100vw; height:100vh; font-size: 12px; margin-left: 5px;text-align:center;padding-top: 5px;   background-color: #ffc107;" >2</span-->
+    <div class="card-header" id="divNotification" 
+      style=" background-image: url('images/notification-bell.png');background-size: cover; background-repeat: no-repeat; background-position: center;  width:100vw; height:100vh;">
+      <div id="divCount"
+        style="font-size: 13px;  margin-top: 3px; margin-left: 18px; text-align:center;vertical-align: bottom;  background-color: #ffc107;"
+        class="circle">0</div>
+    </div>
+  </body>
+</html>
