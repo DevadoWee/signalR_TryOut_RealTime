@@ -34,62 +34,57 @@ function initConnectionRT() {
     // jQuery.getScript('jquery.signalR-6.0.11.js', function () {
 
     //booOverrideWithTCP = false;
-    const connection = new signalR.HubConnectionBuilder()
+    const retryTimes = [5000];//5 sec
+    const realTimeEvtConnection = new signalR.HubConnectionBuilder()
+    .withAutomaticReconnect({
+        nextRetryDelayInMilliseconds: context => {
+          const index = context.previousRetryCount < retryTimes.length ? context.previousRetryCount : retryTimes.length - 1;
+          return retryTimes[index];
+        }
+    })
     .withUrl(strPushNotificationUrl.concat("/", strHub), {
         // skipNegotiation: true,  // skipNegotiation as we specify WebSockets
         // transport: signalR.HttpTransportType.WebSockets  // force WebSocket transport
       }) // Enable detailed logging
     .build();
 
-connection.start()
-    .then(() => console.log("Connected to SignalR"))
-    .catch(err => console.error("SignalR error:", err));
-
-    
-    realTimeEvtConnection.start().done(function () {
-        statusMessage = 'active';
-
-        booConnectedToHub = true;
-        //alert("connected")
-        
-        console.log("Connected to HUB");
-        objListenerProxy.invoke("connect", strUserLoginId);
-
+    //ReceiveMessage
+    realTimeEvtConnection.on("ReceiveMessage", (message) => {
+        console.log("Message from server:" + message);
     });
 
+    //connection.invoke("ReceiveMessage", "Hello from the client!")
 
-    realTimeEvtConnection.disconnected(function () {
-        console.log("Disconnected fom HUB");
+    realTimeEvtConnection.start()
+        .then(() => {
+            console.log("Connected to HUB");
+            booConnectedToHub = true;
+            statusMessage = 'active';
+        })
+        .catch((err) => {
+            console.error("Failed to connect to HUB. Retrying in 5 seconds...", err);
+            booConnectedToHub = false;
+            statusMessage = 'inactive';
+        });
 
-
+    // Handle disconnection
+    realTimeEvtConnection.onclose(() => {
+        console.log("Disconnected from HUB");
         booConnectedToHub = false;
-
-        setTimeout(function () {
-            realTimeEvtConnection.start().done(function () {
-                console.log("Connected to HUB");
-                booConnectedToHub = true;
-                objListenerProxy.invoke("connect", strUserLoginId);
-
-            });
-        }, 5000); // Restart connection after 5 seconds.
-
-        //reconnect
-        //objListenerProxy.invoke("connect", strUserLoginId);
+    
+        // Start the reconnection process
+        setTimeout(startConnectionWithRetry, 5000);
     });
 
-    realTimeEvtConnection.reconnecting(function () {
-        console.log("reconnecting")
-        
+    // Handle the reconnecting event
+    realTimeEvtConnection.onreconnecting(() => {
+        console.log("Reconnecting...");
         statusMessage = 'inactive';
-    
     });
 
-    realTimeEvtConnection.reconnected(function () {
-        console.log("reconnected")
-
+    // Handle the reconnected event
+    realTimeEvtConnection.onreconnected(() => {
+        console.log("Reconnected to HUB");
         statusMessage = 'active';
-    
-        objListenerProxy.invoke("connect", strUserLoginId);
     });
-
 }
