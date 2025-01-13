@@ -43,12 +43,12 @@ app.UseAuthorization();
 
 // Map your endpoints and hubs
 app.MapControllers();
-app.MapHub<ChatHub>("/chat-hub"); // Ensure this matches your client-side SignalR URL
+app.MapHub<ChatHub>("chat-hub"); // Ensure this matches your client-side SignalR URL
 
 // Optional: Example broadcast endpoint
 app.MapPost("broadcast", async (string message, IHubContext<ChatHub, IChatClient> context) =>
 {
-    await context.Clients.All.ReceiveMessage(message);
+    await context.Clients.All.SendMessageToClient(message);
     return Results.NoContent();
 });
 
