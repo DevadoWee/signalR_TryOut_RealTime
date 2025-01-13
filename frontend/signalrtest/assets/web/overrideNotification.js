@@ -49,7 +49,7 @@ function initConnectionRT() {
     .build();
 
     //ReceiveMessage
-    realTimeEvtConnection.on("ReceiveMessage", (message) => {
+    realTimeEvtConnection.on("SendMessageToClient", (message) => {
         console.log("Message from server:" + message);
     });
 
