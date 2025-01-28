@@ -2,6 +2,7 @@
 using SignalRIntro.Api;
 using Microsoft.OpenApi.Models;
 
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -49,6 +50,13 @@ app.MapHub<ChatHub>("chat-hub"); // Ensure this matches your client-side SignalR
 app.MapPost("broadcast", async (string message, IHubContext<ChatHub, IChatClient> context) =>
 {
     await context.Clients.All.SendMessageToClient(message);
+    return Results.NoContent();
+});
+
+app.MapPost("sendTo", async (string pNumber, string message, IHubContext<ChatHub, IChatClient> context) =>
+{
+
+    await context.Clients.Client(message).SendMessageToClient(message);
     return Results.NoContent();
 });
 
